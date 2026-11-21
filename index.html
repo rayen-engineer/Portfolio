@@ -230,15 +230,19 @@ async function sim3d(){const id=++simId,box=$('#d3');
  }catch(e){const m=$('#d3m');if(m)m.textContent=UI[L].bad}}
 
 /* ---------- MediaPipe: loaded only when the visitor taps the button ---------- */
-function loadMP(){return mpP||(mpP=ldS('libs/mediapipe/hands.js','https://cdn.jsdelivr.net/npm/@mediapipe/hands@0.4.1675469240/hands.js').then(a=>{if(a[0]!='l')mpBase='https://cdn.jsdelivr.net/npm/@mediapipe/hands@0.4.1675469240/'}).catch(e=>{mpP=null;throw e}))}
+const MPV='@mediapipe/hands@0.4.1675469240/',MPC=['https://cdn.jsdelivr.net/npm/'+MPV,'https://unpkg.com/'+MPV];let mpR=null,mpTry=0,mpErr=0;
+function loadMP(){return mpP||(mpP=ldS('libs/mediapipe/hands.js',MPC[0]+'hands.js').then(a=>{if(a[0]!='l')mpBase=MPC[0]},()=>ldS(MPC[1]+'hands.js').then(()=>{mpBase=MPC[1]})).catch(e=>{mpP=null;throw e}))}
+function warmMP(){return mpR||(mpR=(async()=>{await loadMP();const h=new Hands({locateFile:f=>mpBase+f});h.setOptions({maxNumHands:1,modelComplexity:1,minDetectionConfidence:.6,minTrackingConfidence:.5});h.onResults(onHand);
+ try{await Promise.race([h.initialize(),new Promise((_,j)=>setTimeout(()=>j('timeout'),45000))]);const c=document.createElement('canvas');c.width=c.height=64;await h.send({image:c})}catch(e){try{h.close()}catch(_){}throw e}
+ hands=h;mpErr=0;return h})().catch(e=>{console.warn('MediaPipe warm-up failed',e);hands=null;mpR=null;mpP=null;if(++mpTry<4)setTimeout(warmMP,3000)}))}
 async function toggleCam(){if(cam){stopCam();return}
  try{if(!navigator.mediaDevices||!navigator.mediaDevices.getUserMedia)throw 0;
-  sc(UI[L].ld);await loadMP();
+  warmMP();
   stream=await navigator.mediaDevices.getUserMedia({video:{width:640,height:480,facingMode:'user'},audio:false});
   const v=$('#vid');v.srcObject=stream;await v.play();$('#pip').style.display='block';
-  if(!hands){hands=new Hands({locateFile:f=>mpBase+f});hands.setOptions({maxNumHands:1,modelComplexity:1,minDetectionConfidence:.6,minTrackingConfidence:.5});hands.onResults(onHand)}
-  cam=true;$('#cb').textContent=UI[L].off;sc(UI[L].no);(async function lp(){if(!cam)return;try{if(v.readyState>=2)await hands.send({image:v})}catch(e){}requestAnimationFrame(lp)})()
+  cam=true;$('#cb').textContent=UI[L].off;sc(UI[L].no);(async function lp(){if(!cam)return;try{if(hands&&v.readyState>=2){await hands.send({image:v});mpErr=0}}catch(e){console.warn('MediaPipe send',e);if(++mpErr>20){mpErr=0;hands=null;mpR=null;mpP=null;mpTry=0;warmMP()}}requestAnimationFrame(lp)})()
  }catch(e){stopCam();sc(UI[L].bad)}}
+document.readyState=='complete'?setTimeout(warmMP,2000):addEventListener('load',()=>setTimeout(warmMP,2000));
 function stopCam(){cam=false;if(stream)stream.getTracks().forEach(t=>t.stop());stream=null;const p=$('#pip'),b=$('#cb');if(p)p.style.display='none';if(b)b.textContent=UI[L].cam}
 function onHand(r){const o=$('#ov');if(!o||!cam)return;const v=$('#vid');o.width=v.videoWidth||640;o.height=v.videoHeight||480;
  const x=o.getContext('2d');x.clearRect(0,0,o.width,o.height);const l=r.multiHandLandmarks&&r.multiHandLandmarks[0];
