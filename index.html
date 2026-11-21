@@ -232,10 +232,11 @@ async function sim3d(){const id=++simId,box=$('#d3');
 /* ---------- MediaPipe: loaded only when the visitor taps the button ---------- */
 const MPV='@mediapipe/hands@0.4.1675469240/',MPC=['https://cdn.jsdelivr.net/npm/'+MPV,'https://unpkg.com/'+MPV];let mpR=null,mpTry=0,mpErr=0;
 function loadMP(){return mpP||(mpP=ldS('libs/mediapipe/hands.js',MPC[0]+'hands.js').then(a=>{if(a[0]!='l')mpBase=MPC[0]},()=>ldS(MPC[1]+'hands.js').then(()=>{mpBase=MPC[1]})).catch(e=>{mpP=null;throw e}))}
-function warmMP(){return mpR||(mpR=(async()=>{await loadMP();const h=new Hands({locateFile:f=>mpBase+f});h.setOptions({maxNumHands:1,modelComplexity:1,minDetectionConfidence:.6,minTrackingConfidence:.5});h.onResults(onHand);
- try{await Promise.race([h.initialize(),new Promise((_,j)=>setTimeout(()=>j('timeout'),240000))]);const c=document.createElement('canvas');c.width=c.height=64;await h.send({image:c})}catch(e){try{h.close()}catch(_){}throw e}
- hands=h;mpErr=0;return h})().catch(e=>{console.warn('MediaPipe warm-up failed',e);hands=null;mpR=null;mpP=null;if(++mpTry<4)setTimeout(warmMP,3000)}))}
-async function toggleCam(){if(cam){stopCam();return}
+function dbg(t){try{let d=document.getElementById('dbg');if(!d){d=document.createElement('div');d.id='dbg';d.style.cssText='position:fixed;top:0;left:0;right:0;z-index:99999;background:#000;color:#0f0;font:11px monospace;padding:2px;pointer-events:none';document.body.appendChild(d)}d.textContent=t}catch(_){}}
+function warmMP(){return mpR||(mpR=(async()=>{dbg('MP: loading js');await loadMP();dbg('MP: js ok '+mpBase);const h=new Hands({locateFile:f=>mpBase+f});h.setOptions({maxNumHands:1,modelComplexity:1,minDetectionConfidence:.6,minTrackingConfidence:.5});h.onResults(onHand);
+ try{await Promise.race([h.initialize(),new Promise((_,j)=>setTimeout(()=>j('timeout'),240000))])}catch(e){try{h.close()}catch(_){}throw e}
+ dbg('MP: init ok');try{const c=document.createElement('canvas');c.width=c.height=64;await Promise.race([h.send({image:c}),new Promise((_,j)=>setTimeout(()=>j('warm timeout'),60000))])}catch(e){dbg('MP warm send: '+e)}
+ hands=h;mpErr=0;dbg('MP: ready');return h})().catch(e=>{dbg('MP ERR: '+(e&&e.message||e));console.warn('MediaPipe warm-up failed',e);hands=null;mpR=null;mpP=null;if(++mpTry<4)setTimeout(warmMP,3000)}))}
  try{if(!navigator.mediaDevices||!navigator.mediaDevices.getUserMedia)throw 0;
   warmMP();
   stream=await navigator.mediaDevices.getUserMedia({video:{width:640,height:480,facingMode:'user'},audio:false});
