@@ -268,7 +268,7 @@ async function sim3d(){const id=++simId,box=$('#d3');
  const s={x:0,y:2,z:0,yaw:0,vy:0,vf:0,vl:0,yr:0};let last=performance.now();
  (function f(t){if(id!=simId||cur!=11){r.dispose();return}requestAnimationFrame(f);
   const dt=Math.min(.05,(t-last)/1000);last=t;const k=Math.min(1,dt*4),m={fwd:(K.W?1:0)-(K.S?1:0),lat:(K.D?1:0)-(K.A?1:0),alt:(K.U?1:0)-(K.N?1:0),yaw:(K.Q?1:0)-(K.E?1:0)},I=H||m,lock=H&&H.lock;
-  s.vy+=((lock?0:I.alt*3)-s.vy)*k;s.vf+=((lock?0:I.fwd*4)-s.vf)*k;s.vl+=((lock?0:I.lat*4)-s.vl)*k;{const yc=Math.max(-1,Math.min(1,m.yaw+(H&&!lock?H.yaw:0)));s.yr+=(yc-s.yr)*k;s.yaw+=yc*dt*1.6}
+  s.vy+=((lock?0:I.alt*3)-s.vy)*k;s.vf+=((lock?0:I.fwd*4)-s.vf)*k;s.vl+=((lock?0:I.lat*4)-s.vl)*k;{const yc=Math.max(-1,Math.min(1,m.yaw+(H?H.yaw:0)));s.yr+=(yc-s.yr)*k;s.yaw+=yc*dt*1.6}
   s.x=Math.max(-18,Math.min(18,s.x+(-Math.sin(s.yaw)*s.vf+Math.cos(s.yaw)*s.vl)*dt));s.z=Math.max(-18,Math.min(18,s.z+(-Math.cos(s.yaw)*s.vf-Math.sin(s.yaw)*s.vl)*dt));s.y=Math.min(14,Math.max(.4,s.y+s.vy*dt));
   g.position.set(s.x,s.y,s.z);g.rotation.set(-s.vf/4*.35,s.yaw,-s.vl/4*.35+s.yr*.3);bl.forEach(b=>b.rotation.y+=b.userData.d*dt*(35+s.vy*4));sh.position.set(s.x,.02,s.z);sh.scale.setScalar(Math.max(.3,1.1-s.y/16));
   const tp=view==0?[s.x+Math.sin(s.yaw)*5,s.y+2.5,s.z+Math.cos(s.yaw)*5]:view==1?[14,12,14]:[0,30,.01];cm.position.lerp(new THREE.Vector3(tp[0],tp[1],tp[2]),Math.min(1,dt*3));
@@ -293,14 +293,20 @@ async function toggleCam(){if(cam){stopCam();return}
   await mpInit();cam=true;$('#cb').textContent=UI[L].off;sc(UI[L].no);(async function lp(){if(!cam)return;try{if(v.readyState>=2)await hands.send({image:v})}catch(e){sc('MP error: '+(e&&e.message||e));return}requestAnimationFrame(lp)})()
  }catch(e){stopCam();sc(e===0||!e?UI[L].bad:'MP error: '+(e.message||e))}}
 function stopCam(){cam=false;if(stream)stream.getTracks().forEach(t=>t.stop());stream=null;const p=$('#pip'),b=$('#cb');if(p)p.style.display='none';if(b)b.textContent=UI[L].cam}
-window.mpN=0;function onHand(r){mpN++;const o=$('#ov');if(!o||!cam)return;const v=$('#vid');o.width=v.videoWidth||640;o.height=v.videoHeight||480;
+window.mpN=0;var G={gp:0,pt:0,po:0,pto:0,lk:0,sa:0,sf:0,sy:0,nx:null,ls:0};function onHand(r){mpN++;const o=$('#ov');if(!o||!cam)return;const v=$('#vid');o.width=v.videoWidth||640;o.height=v.videoHeight||480;
  const x=o.getContext('2d');x.clearRect(0,0,o.width,o.height);const l=r.multiHandLandmarks&&r.multiHandLandmarks[0];
- if(!l){H=null;sc(UI[L].no+' ['+mpN+']');return}
+ if(!l){if(H&&performance.now()-G.ls<400){H={alt:H.alt*.7,lat:0,yaw:H.yaw*.7,fwd:H.fwd*.7,lock:false};G.sy*=.7;G.sf*=.7;G.sa*=.7}else{H=null;G.sy=G.sf=G.sa=0;sc(UI[L].no)}return}
  x.fillStyle='#ffb347';l.forEach(p=>{x.beginPath();x.arc(p.x*o.width,p.y*o.height,4,0,7);x.fill()});
  const d=(a,b)=>Math.hypot(l[a].x-l[b].x,l[a].y-l[b].y),ex=(t,m)=>d(t,0)/d(m,0);
  const op=[[8,5],[12,9],[16,13],[20,17]].reduce((a,p)=>a+ex(p[0],p[1]),0)/4,o1=Math.min(1,Math.max(0,(op-1)/.9));
- const alt=o1>.58?(o1-.58)/.42:o1<.44?-(.44-o1)/.44:0,peace=ex(8,5)>1.6&&ex(12,9)>1.6&&ex(16,13)<1.3&&ex(20,17)<1.3,point=ex(8,5)>1.6&&ex(12,9)<1.3&&ex(16,13)<1.3&&ex(20,17)<1.3,lock=d(4,8)/d(0,9)<.3;
- const hx=(.5-l[9].x)*3,yw=Math.abs(hx)<.25?0:Math.max(-1,Math.min(1,(hx-Math.sign(hx)*.25)/.75));H={alt:point?0:alt,lat:0,yaw:-yw,fwd:peace?.8:point?-.6:0,lock:lock};sc(lock?UI[L].hold:UI[L].fly)}
+ const now=performance.now(),rp=ex(8,5)>1.5&&ex(12,9)>1.5&&ex(16,13)<1.35&&ex(20,17)<1.35,rt=ex(8,5)>1.5&&ex(12,9)<1.35&&ex(16,13)<1.35&&ex(20,17)<1.35,rl=d(4,8)/d(0,9)<.3;
+ G.gp=Math.max(0,Math.min(5,G.gp+(rp?1:-1)));G.pt=Math.max(0,Math.min(5,G.pt+(rt?1:-1)));G.lk=Math.max(0,Math.min(4,G.lk+(rl?1:-1)));
+ if(G.gp>=3)G.po=1;else if(G.gp<=1)G.po=0;if(G.pt>=3)G.pto=1;else if(G.pt<=1)G.pto=0;
+ const peace=!!G.po,point=!!G.pto&&!peace,lock=G.lk>=3&&!peace&&!point,alt=o1>.65?Math.min(1,(o1-.65)/.25):o1<.35?-(.35-o1)/.35:0;
+ if(G.nx==null||now-G.ls>900)G.nx=Math.max(.35,Math.min(.65,l[9].x));G.ls=now;
+ const hx=(G.nx-l[9].x)*3.4,yt=Math.abs(hx)<.2?0:Math.max(-1,Math.min(1,(hx-Math.sign(hx)*.2)/.7)),ft=peace?.8:point?-.6:0,at=(peace||point)?0:alt;
+ G.sy+=(yt-G.sy)*.35;G.sf+=(ft-G.sf)*.3;G.sa+=(at-G.sa)*.3;
+ H={alt:G.sa,lat:0,yaw:-G.sy,fwd:G.sf,lock:lock};sc(lock?UI[L].hold:UI[L].fly)}
 
 /* ---------- heart-rate (PPG) via fingertip on the camera lens: runs fully in the page ---------- */
 let pp=null;
