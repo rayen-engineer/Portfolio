@@ -281,7 +281,9 @@ function loadMP(){return mpP||(mpP=ldS('libs/mediapipe/hands.js','https://cdn.js
 let mpLast='';
 function mkHands(){hands=new Hands({locateFile:f=>{mpLast=f;return mpBase+f}});hands.setOptions({maxNumHands:1,modelComplexity:0,minDetectionConfidence:.5,minTrackingConfidence:.5});hands.onResults(onHand)}
 const mpTO=(p,ms)=>Promise.race([p,new Promise((_,j)=>setTimeout(()=>j(new Error('timeout: '+mpLast)),ms))]);
-async function mpInit(){try{await mpTO(hands.initialize(),8000)}catch(e){const C='https://cdn.jsdelivr.net/npm/@mediapipe/hands@0.4.1675469240/';if(mpBase===C)throw e;mpBase=C;sc('Loading (backup)...');mkHands();await mpTO(hands.initialize(),40000)}}
+let mpReady=null;
+function mpInit(){if(mpReady)return mpReady;mpReady=(async()=>{if(!hands)mkHands();try{await mpTO(hands.initialize(),90000)}catch(e){const C='https://cdn.jsdelivr.net/npm/@mediapipe/hands@0.4.1675469240/';if(mpBase===C)throw e;mpBase=C;mkHands();await mpTO(hands.initialize(),60000)}})();mpReady.catch(()=>{mpReady=null});return mpReady}
+function mpWarm(){try{loadMP().then(()=>mpInit()).catch(()=>{})}catch(e){}}
 async function toggleCam(){if(cam){stopCam();return}
  try{if(!navigator.mediaDevices||!navigator.mediaDevices.getUserMedia)throw 0;
   sc(UI[L].ld);await loadMP();
@@ -520,7 +522,7 @@ function zapSnd(){try{zapWarm();const A=zA,t=A.currentTime+.01,m=A.createGain();
  const o=A.createOscillator(),g=A.createGain(),lp=A.createBiquadFilter();o.type='sawtooth';o.frequency.setValueAtTime(140,t);o.frequency.exponentialRampToValueAtTime(70,t+.35);
  g.gain.setValueAtTime(.0001,t);g.gain.exponentialRampToValueAtTime(.22,t+.02);g.gain.exponentialRampToValueAtTime(.0001,t+.4);lp.type='lowpass';lp.frequency.value=900;o.connect(lp);lp.connect(g);g.connect(m);o.start(t);o.stop(t+.45);
  const z=A.createOscillator(),zg=A.createGain();z.type='square';z.frequency.setValueAtTime(2400,t);z.frequency.exponentialRampToValueAtTime(220,t+.14);zg.gain.setValueAtTime(.09,t);zg.gain.exponentialRampToValueAtTime(.0001,t+.15);z.connect(zg);zg.connect(m);z.start(t);z.stop(t+.18)}catch(e){}}
-let gb=0;$('#gate').addEventListener('pointerdown',zapWarm);$('#gate').addEventListener('click',e=>{const b=e.target.closest('button[data-l]');if(!b||gb)return;gb=1;
+let gb=0;$('#gate').addEventListener('pointerdown',zapWarm);$('#gate').addEventListener('click',e=>{const b=e.target.closest('button[data-l]');if(!b||gb)return;gb=1;mpWarm();
  const fin=()=>{setLang(b.dataset.l);$('#gate').classList.add('hold');tut()};
  if(matchMedia('(prefers-reduced-motion:reduce)').matches)fin();else{b.classList.add('zap');zapSnd();zapFx(b,fin)}});
 setLang(initLang());bg();document.querySelectorAll('#gate button').forEach(b=>b.classList.toggle('on',b.dataset.l==L));
