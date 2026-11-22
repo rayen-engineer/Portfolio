@@ -284,8 +284,8 @@ async function toggleCam(){if(cam){stopCam();return}
   stream=await navigator.mediaDevices.getUserMedia({video:{width:640,height:480,facingMode:'user'},audio:false});
   const v=$('#vid');v.srcObject=stream;await v.play();$('#pip').style.display='block';
   if(!hands){hands=new Hands({locateFile:f=>mpBase+f});hands.setOptions({maxNumHands:1,modelComplexity:1,minDetectionConfidence:.6,minTrackingConfidence:.5});hands.onResults(onHand)}
-  cam=true;$('#cb').textContent=UI[L].off;sc(UI[L].no);(async function lp(){if(!cam)return;try{if(v.readyState>=2)await hands.send({image:v})}catch(e){}requestAnimationFrame(lp)})()
- }catch(e){stopCam();sc(UI[L].bad)}}
+  await hands.initialize();cam=true;$('#cb').textContent=UI[L].off;sc(UI[L].no);(async function lp(){if(!cam)return;try{if(v.readyState>=2)await hands.send({image:v})}catch(e){sc('MP error: '+(e&&e.message||e));return}requestAnimationFrame(lp)})()
+ }catch(e){stopCam();sc(e===0||!e?UI[L].bad:'MP error: '+(e.message||e))}}
 function stopCam(){cam=false;if(stream)stream.getTracks().forEach(t=>t.stop());stream=null;const p=$('#pip'),b=$('#cb');if(p)p.style.display='none';if(b)b.textContent=UI[L].cam}
 function onHand(r){const o=$('#ov');if(!o||!cam)return;const v=$('#vid');o.width=v.videoWidth||640;o.height=v.videoHeight||480;
  const x=o.getContext('2d');x.clearRect(0,0,o.width,o.height);const l=r.multiHandLandmarks&&r.multiHandLandmarks[0];
