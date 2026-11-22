@@ -1,8 +1,8 @@
-<!doctype html><html lang="en" dir="ltr"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover"><title>Rayen Boulaares – Embedded Systems Portfolio</title>
+<!doctype html><html lang="en" dir="ltr"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover"><meta name="color-scheme" content="dark"><meta name="theme-color" content="#0c1218"><title>Rayen Boulaares – Embedded Systems Portfolio</title>
 <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;700&family=Space+Grotesk:wght@500;700&display=swap" rel="stylesheet">
 <style>
-:root{--bg:#0c1218;--pn:#141d27;--ln:#27384a;--tx:#e8eef4;--mu:#93a4b5;--ac:#ffb347;--te:#4fd1c5;box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}
-@media(prefers-color-scheme:light){:root{--bg:#f4f7fa;--pn:#fff;--ln:#cfd8e1;--tx:#14202b;--mu:#52657a;--ac:#b45f00;--te:#0b7f76}}
+:root{--bg:#0c1218;--pn:#141d27;--ln:#27384a;--tx:#e8eef4;--mu:#93a4b5;--ac:#ffb347;--te:#4fd1c5;color-scheme:dark;box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}
+@media(prefers-color-scheme:never){:root{--bg:#f4f7fa;--pn:#fff;--ln:#cfd8e1;--tx:#14202b;--mu:#52657a;--ac:#b45f00;--te:#0b7f76}}
 html{scroll-padding-top:env(safe-area-inset-top,0px)}
 html,body{height:100%;margin:0}
 body{background:var(--bg);color:var(--tx);font:16px/1.6 'Space Grotesk','Cairo',system-ui,sans-serif;display:flex;flex-direction:column;overflow:hidden}
@@ -88,7 +88,7 @@ header,footer{background:color-mix(in srgb,var(--bg) 78%,transparent);-webkit-ba
 .hg::after{content:'';position:absolute;inset:0;pointer-events:none;background:repeating-linear-gradient(0deg,transparent 0 2px,color-mix(in srgb,var(--bg) 65%,transparent) 2px 3px)}
 @keyframes hgs{0%,100%{transform:rotateY(-35deg) translateY(0)}50%{transform:rotateY(35deg) translateY(-2px)}}
 @keyframes hgf{0%,91%,100%{opacity:1}93%{opacity:.45}95%{opacity:.95}97%{opacity:.6}}
-@media(prefers-color-scheme:light){.hg i{filter:grayscale(1) sepia(1) hue-rotate(140deg) saturate(4) brightness(.8) drop-shadow(0 0 2px var(--te))}}
+@media(prefers-color-scheme:never){.hg i{filter:grayscale(1) sepia(1) hue-rotate(140deg) saturate(4) brightness(.8) drop-shadow(0 0 2px var(--te))}}
 @media(prefers-reduced-motion:reduce){.hg,.hg u{animation:none}.hg u{transform:rotateY(-20deg)}}
 /* ===== PROGRESS BAR + TUTORIAL ===== */
 #stage{transition:opacity .5s}#bg{transition:opacity .5s}
@@ -361,7 +361,7 @@ async function mvStart(){if(mv)return;const u=MV[L],box=$('#mc');if(!box)return;
   const W=Math.max(240,box.clientWidth),Hh=Math.round(W*.75),r=new THREE.WebGLRenderer({antialias:true,alpha:true});me.r=r;
   r.setPixelRatio(Math.min(devicePixelRatio,2));r.setSize(W,Hh);r.setClearColor(0x000000,0);
   box.textContent='';box.style.cssText='line-height:0';box.appendChild(r.domElement);r.domElement.style.cssText='width:100%;height:auto;display:block';
-  const lt=matchMedia('(prefers-color-scheme:light)').matches,bm=lt?THREE.NormalBlending:THREE.AdditiveBlending,te=new THREE.Color(css('--te')),ac=new THREE.Color(css('--ac')),UT={value:0};
+  const lt=matchMedia('(prefers-color-scheme:never)').matches,bm=lt?THREE.NormalBlending:THREE.AdditiveBlending,te=new THREE.Color(css('--te')),ac=new THREE.Color(css('--ac')),UT={value:0};
   /* hologram look: fresnel skin + scan lines + wire edges */
   const sk=new THREE.ShaderMaterial({transparent:true,depthWrite:false,side:THREE.DoubleSide,blending:bm,
    vertexShader:'varying vec3 vN,vV;varying float vW;void main(){vec4 m=modelViewMatrix*vec4(position,1.);vN=normalize(normalMatrix*normal);vV=-m.xyz;vW=(modelMatrix*vec4(position,1.)).y;gl_Position=projectionMatrix*m;}',
@@ -422,7 +422,7 @@ async function hand3d(){const id=++hid,box=$('#hm'),cd=S[cur][L].cards;
   const r=new THREE.WebGLRenderer({antialias:true,alpha:true}),m0=$('#d3m');if(m0)m0.remove();r.setSize(W,Hh);r.setPixelRatio(Math.min(devicePixelRatio,2));box.appendChild(r.domElement);
   const sc3=new THREE.Scene(),cm=new THREE.PerspectiveCamera(40,W/Hh,.1,80),tn=Math.tan(20*Math.PI/180),dd=Math.max(nr*SY/2/tn,nc*SX/2/(tn*W/Hh))*1.04;
   cm.position.set(0,0,dd);cm.lookAt(0,0,0);cm.updateMatrixWorld();
-  const lt=matchMedia('(prefers-color-scheme:light)').matches,bm=lt?THREE.NormalBlending:THREE.AdditiveBlending,te=new THREE.Color(css('--te')),ac=new THREE.Color(css('--ac'));
+  const lt=matchMedia('(prefers-color-scheme:never)').matches,bm=lt?THREE.NormalBlending:THREE.AdditiveBlending,te=new THREE.Color(css('--te')),ac=new THREE.Color(css('--ac'));
   const mt=(c,o)=>new THREE.MeshBasicMaterial({color:c,transparent:true,opacity:o,blending:bm,depthWrite:false,side:THREE.DoubleSide});
   const sm=mt(te,lt?.2:.14),jm=mt(ac,lt?.9:.85),bs=mt(te,.14),rg=mt(te,.7),sn=mt(ac,.55),bq=mt(te,lt?.07:.06),em=new THREE.LineBasicMaterial({color:te,transparent:true,opacity:lt?.9:.85,blending:bm,depthWrite:false});
   const HM=(g,th)=>{const o=new THREE.Group();o.add(new THREE.Mesh(g,sm),new THREE.LineSegments(new THREE.EdgesGeometry(g,th||15),em));return o},LL=[1,.72,.55],A=[1.35,1.6,1.15];
