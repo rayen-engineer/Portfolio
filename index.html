@@ -278,13 +278,17 @@ async function sim3d(){const id=++simId,box=$('#d3');
 
 /* ---------- MediaPipe: loaded only when the visitor taps the button ---------- */
 function loadMP(){return mpP||(mpP=ldS('libs/mediapipe/hands.js','https://cdn.jsdelivr.net/npm/@mediapipe/hands@0.4.1675469240/hands.js').then(a=>{if(a[0]!='l')mpBase='https://cdn.jsdelivr.net/npm/@mediapipe/hands@0.4.1675469240/'}).catch(e=>{mpP=null;throw e}))}
+let mpLast='';
+function mkHands(){hands=new Hands({locateFile:f=>{mpLast=f;return mpBase+f}});hands.setOptions({maxNumHands:1,modelComplexity:0,minDetectionConfidence:.5,minTrackingConfidence:.5});hands.onResults(onHand)}
+const mpTO=(p,ms)=>Promise.race([p,new Promise((_,j)=>setTimeout(()=>j(new Error('timeout: '+mpLast)),ms))]);
+async function mpInit(){try{await mpTO(hands.initialize(),8000)}catch(e){const C='https://cdn.jsdelivr.net/npm/@mediapipe/hands@0.4.1675469240/';if(mpBase===C)throw e;mpBase=C;sc('Loading (backup)...');mkHands();await mpTO(hands.initialize(),40000)}}
 async function toggleCam(){if(cam){stopCam();return}
  try{if(!navigator.mediaDevices||!navigator.mediaDevices.getUserMedia)throw 0;
   sc(UI[L].ld);await loadMP();
   stream=await navigator.mediaDevices.getUserMedia({video:{width:640,height:480,facingMode:'user'},audio:false});
   const v=$('#vid');v.srcObject=stream;await v.play();$('#pip').style.display='block';
-  if(!hands){hands=new Hands({locateFile:f=>mpBase+f});hands.setOptions({maxNumHands:1,modelComplexity:0,minDetectionConfidence:.5,minTrackingConfidence:.5});hands.onResults(onHand)}
-  await hands.initialize();cam=true;$('#cb').textContent=UI[L].off;sc(UI[L].no);(async function lp(){if(!cam)return;try{if(v.readyState>=2)await hands.send({image:v})}catch(e){sc('MP error: '+(e&&e.message||e));return}requestAnimationFrame(lp)})()
+  if(!hands)mkHands();
+  await mpInit();cam=true;$('#cb').textContent=UI[L].off;sc(UI[L].no);(async function lp(){if(!cam)return;try{if(v.readyState>=2)await hands.send({image:v})}catch(e){sc('MP error: '+(e&&e.message||e));return}requestAnimationFrame(lp)})()
  }catch(e){stopCam();sc(e===0||!e?UI[L].bad:'MP error: '+(e.message||e))}}
 function stopCam(){cam=false;if(stream)stream.getTracks().forEach(t=>t.stop());stream=null;const p=$('#pip'),b=$('#cb');if(p)p.style.display='none';if(b)b.textContent=UI[L].cam}
 window.mpN=0;function onHand(r){mpN++;const o=$('#ov');if(!o||!cam)return;const v=$('#vid');o.width=v.videoWidth||640;o.height=v.videoHeight||480;
