@@ -283,13 +283,13 @@ async function toggleCam(){if(cam){stopCam();return}
   sc(UI[L].ld);await loadMP();
   stream=await navigator.mediaDevices.getUserMedia({video:{width:640,height:480,facingMode:'user'},audio:false});
   const v=$('#vid');v.srcObject=stream;await v.play();$('#pip').style.display='block';
-  if(!hands){hands=new Hands({locateFile:f=>mpBase+f});hands.setOptions({maxNumHands:1,modelComplexity:1,minDetectionConfidence:.6,minTrackingConfidence:.5});hands.onResults(onHand)}
+  if(!hands){hands=new Hands({locateFile:f=>mpBase+f});hands.setOptions({maxNumHands:1,modelComplexity:0,minDetectionConfidence:.5,minTrackingConfidence:.5});hands.onResults(onHand)}
   await hands.initialize();cam=true;$('#cb').textContent=UI[L].off;sc(UI[L].no);(async function lp(){if(!cam)return;try{if(v.readyState>=2)await hands.send({image:v})}catch(e){sc('MP error: '+(e&&e.message||e));return}requestAnimationFrame(lp)})()
  }catch(e){stopCam();sc(e===0||!e?UI[L].bad:'MP error: '+(e.message||e))}}
 function stopCam(){cam=false;if(stream)stream.getTracks().forEach(t=>t.stop());stream=null;const p=$('#pip'),b=$('#cb');if(p)p.style.display='none';if(b)b.textContent=UI[L].cam}
-function onHand(r){const o=$('#ov');if(!o||!cam)return;const v=$('#vid');o.width=v.videoWidth||640;o.height=v.videoHeight||480;
+window.mpN=0;function onHand(r){mpN++;const o=$('#ov');if(!o||!cam)return;const v=$('#vid');o.width=v.videoWidth||640;o.height=v.videoHeight||480;
  const x=o.getContext('2d');x.clearRect(0,0,o.width,o.height);const l=r.multiHandLandmarks&&r.multiHandLandmarks[0];
- if(!l){H=null;sc(UI[L].no);return}
+ if(!l){H=null;sc(UI[L].no+' ['+mpN+']');return}
  x.fillStyle='#ffb347';l.forEach(p=>{x.beginPath();x.arc(p.x*o.width,p.y*o.height,4,0,7);x.fill()});
  const d=(a,b)=>Math.hypot(l[a].x-l[b].x,l[a].y-l[b].y),ex=(t,m)=>d(t,0)/d(m,0);
  const op=[[8,5],[12,9],[16,13],[20,17]].reduce((a,p)=>a+ex(p[0],p[1]),0)/4,o1=Math.min(1,Math.max(0,(op-1)/.9));
